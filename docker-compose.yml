@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.1
+    container_name: Node-db
+    environment:
+      MYSQL_ROOT_PASSWORD:
+      MYSQL_DATABASE:
+      MYSQL_USER:
+      MYSQL_PASSWORD:
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - nginx-lms-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST:
+      MYSQL_ROOT_PASSWORD:
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - nginx-lms-network
+
+  php-fpm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: php-fpm
+    volumes:
+      - ./php-LMS:/var/www/html
+    networks:
+      - nginx-lms-network
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx-server
+    volumes:
+      - ./php-LMS:/var/www/html
+      - ./default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "80:80"
+    depends_on:
+      - php-fpm
+    networks:
+      - nginx-lms-network
+
+volumes:
+  mysql_data:
+
+
+networks:
+  nginx-lms-network:
